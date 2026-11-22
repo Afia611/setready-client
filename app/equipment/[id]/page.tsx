@@ -1,3 +1,4 @@
+﻿import BookingForm from "./booking-form";
 import Link from "next/link";
 import { headers } from "next/headers";
 import { notFound, redirect } from "next/navigation";
@@ -31,7 +32,7 @@ export default function EquipmentDetailsPage({
           Back to equipment
         </Link>
 
-        <Suspense fallback={<p className="mt-6" role="status">Loading equipment…</p>}>
+        <Suspense fallback={<p className="mt-6" role="status">Loading equipmentâ€¦</p>}>
           <EquipmentDetails params={params} />
         </Suspense>
       </div>
@@ -113,10 +114,11 @@ async function EquipmentDetails({
       <p className="mt-1 text-sm text-zinc-600">{listing.quantity} units listed</p>
       <p className="mt-5">{listing.description}</p>
       <p className="mt-3 text-sm text-zinc-600">
-        {listing.brand} {listing.model} · {listing.condition}
+        {listing.brand} {listing.model} Â· {listing.condition}
       </p>
       <h2 className="mt-6 text-lg font-semibold">Rental terms</h2>
       <p className="mt-2 whitespace-pre-line">{listing.rentalTerms}</p>
+      <BookingForm equipmentId={id} />
     </article>
   );
 }
