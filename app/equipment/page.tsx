@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 type Equipment = {
   id: string;
   name: string;
@@ -20,8 +22,9 @@ const rentalPeriods = {
 };
 
 async function getEquipment(): Promise<Equipment[]> {
-  const apiUrl = (process.env.SETREADY_API_URL ?? "http://localhost:5000")
-    .replace(/\/+$/, "");
+  const apiUrl = (
+    process.env.SETREADY_API_URL ?? "http://127.0.0.1:5000"
+  ).replace(/\/+$/, "");
 
   const response = await fetch(`${apiUrl}/api/equipment`, {
     cache: "no-store",
@@ -36,20 +39,7 @@ async function getEquipment(): Promise<Equipment[]> {
 }
 
 export default async function EquipmentPage() {
-  let equipment: Equipment[];
-
-  try {
-    equipment = await getEquipment();
-  } catch {
-    return (
-      <main className="mx-auto max-w-6xl px-6 py-12">
-        <h1 className="text-3xl font-bold">All Equipment</h1>
-        <p role="alert" className="mt-4">
-          Equipment is unavailable right now. Refresh to try again.
-        </p>
-      </main>
-    );
-  }
+  const equipment = await getEquipment().catch(() => null);
 
   return (
     <main className="min-h-screen bg-stone-50 text-zinc-950">
@@ -58,7 +48,11 @@ export default async function EquipmentPage() {
           All Equipment
         </h1>
 
-        {equipment.length === 0 ? (
+        {equipment === null ? (
+          <p role="alert" className="mt-6 text-zinc-600">
+            Equipment is unavailable right now. Refresh to try again.
+          </p>
+        ) : equipment.length === 0 ? (
           <p className="mt-6 text-zinc-600">
             No approved equipment is available yet.
           </p>
@@ -86,6 +80,13 @@ export default async function EquipmentPage() {
                       : "Out of stock"}
                   </p>
                 </div>
+
+                <Link
+                  href={`/equipment/${item.id}`}
+                  className="mt-4 self-start font-medium text-blue-700 hover:underline"
+                >
+                  View Details
+                </Link>
               </li>
             ))}
           </ul>
