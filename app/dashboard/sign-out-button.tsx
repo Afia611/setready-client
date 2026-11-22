@@ -1,54 +1,51 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { readAuthError } from "@/lib/auth-errors";
 
 export function SignOutButton() {
-  const router = useRouter();
-  const [error, setError] = useState<string | null>(null);
-  const [pending, setPending] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
 
-  async function handleSignOut() {
-    setError(null);
-    setPending(true);
+  async function signOut() {
+    setBusy(true);
+    setError("");
 
     try {
       const response = await fetch("/api/auth/sign-out", {
         method: "POST",
-        headers: { "content-type": "application/json" },
+        credentials: "same-origin",
+        headers: { "Content-Type": "application/json" },
         body: "{}",
       });
 
       if (!response.ok) {
-        setError(await readAuthError(response));
-        setPending(false);
-        return;
+        throw new Error("Sign-out failed");
       }
 
-      router.replace("/login?notice=signed-out");
-      router.refresh();
+      window.location.replace("/login");
     } catch {
-      setError("Unable to sign out right now. Please try again.");
-      setPending(false);
+      setError("Could not sign out. Try again.");
+      setBusy(false);
     }
   }
 
   return (
-    <div className="flex flex-col items-end gap-2">
+    <div>
       <button
         type="button"
-        onClick={handleSignOut}
-        disabled={pending}
-        className="rounded-lg border border-zinc-300 px-4 py-2 text-sm font-semibold text-zinc-950 transition hover:bg-zinc-100 disabled:cursor-not-allowed disabled:opacity-60 dark:border-zinc-700 dark:text-zinc-50 dark:hover:bg-zinc-900"
+        onClick={signOut}
+        disabled={busy}
+        className="rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-semibold text-zinc-950 hover:border-zinc-600 disabled:opacity-60"
       >
-        {pending ? "Signing out..." : "Sign out"}
+        {busy ? "Signing out…" : "Sign out"}
       </button>
       {error && (
-        <p role="alert" className="text-xs text-red-700 dark:text-red-300">
+        <p role="alert" className="mt-2 text-sm text-red-700">
           {error}
         </p>
       )}
     </div>
   );
 }
+
+export default SignOutButton;
