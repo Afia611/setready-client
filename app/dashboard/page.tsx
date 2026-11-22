@@ -1,130 +1,158 @@
 import Link from "next/link";
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
-import { connection } from "next/server";
-import { getSession } from "@/lib/auth";
+import { Suspense } from "react";
 import { SignOutButton } from "./sign-out-button";
 
-export const instant = false;
-
-type DashboardPageProps = {
-  searchParams: Promise<{
-    notice?: string | string[];
-  }>;
+type DashboardProps = {
+  searchParams: Promise<{ notice?: string | string[] }>;
 };
 
-const NOTICES: Record<string, string> = {
-  registered: "Account created successfully. Welcome to SetReady.",
-  "signed-in": "Signed in successfully.",
+type DashboardSession = {
+  user?: {
+    name?: string;
+    email?: string;
+    role?: string;
+  };
 };
 
-function firstValue(value: string | string[] | undefined) {
-  return Array.isArray(value) ? value[0] : value;
-}
+type Role = "customer" | "owner" | "admin";
 
-export default async function DashboardPage({
-  searchParams,
-}: DashboardPageProps) {
-  await connection();
-  const session = await getSession();
+const sections: Record<Role, { label: string; href: string }[]> = {
+  customer: [
+    { label: "My Rentals", href: "/dashboard/my-rentals" },
+  ],
+  owner: [
+    { label: "My Equipment", href: "/dashboard/owner/equipment" },
+    { label: "Add Equipment", href: "/dashboard/owner/equipment/new" },
+    { label: "My Equipment Rentals", href: "/dashboard/owner/rentals" },
+  ],
+  admin: [
+    { label: "Manage Users", href: "/dashboard/admin/users" },
+    { label: "Pending Equipment", href: "/dashboard/admin/equipment" },
+    { label: "All Rentals", href: "/dashboard/admin/rentals" },
+  ],
+};
 
-  if (!session) {
-    redirect(`/login?next=${encodeURIComponent("/dashboard")}`);
-  }
+const loginUrl = "/login?next=%2Fdashboard";
 
-  const params = await searchParams;
-  const notice = firstValue(params.notice);
-  const noticeMessage = notice ? NOTICES[notice] : undefined;
-  const { user } = session;
-  const role = user.role ?? "customer";
-  const initials = user.name
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part[0]?.toUpperCase())
-    .join("");
-
+export default function DashboardPage({ searchParams }: DashboardProps) {
   return (
-    <main className="flex flex-1 flex-col bg-zinc-50 font-sans dark:bg-black">
-      <header className="border-b border-black/[.08] bg-white dark:border-white/[.145] dark:bg-zinc-950">
-        <div className="mx-auto flex w-full max-w-4xl items-center justify-between gap-4 px-6 py-4">
-          <Link
-            href="/"
-            className="text-sm font-semibold tracking-tight text-zinc-950 dark:text-zinc-50"
-          >
+    <main className="min-h-screen bg-stone-50 text-zinc-950">
+      <header className="border-b border-zinc-200 bg-white">
+        <div className="mx-auto flex max-w-5xl items-center justify-between gap-4 px-6 py-4">
+          <Link href="/" className="text-xl font-bold">
             SetReady
           </Link>
-          <SignOutButton />
+          <Link
+            href="/equipment"
+            className="text-sm font-semibold text-blue-700 hover:underline"
+          >
+            Browse equipment
+          </Link>
         </div>
       </header>
 
-      <div className="mx-auto w-full max-w-4xl flex-1 px-6 py-12">
-        {noticeMessage && (
-          <p
-            role="status"
-            className="mb-8 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800 dark:border-emerald-900 dark:bg-emerald-950 dark:text-emerald-200"
-          >
-            {noticeMessage}
-          </p>
-        )}
-
-        <p className="text-sm font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
-          Dashboard
-        </p>
-        <h1 className="mt-2 text-3xl font-semibold tracking-tight text-zinc-950 dark:text-zinc-50">
-          Welcome, {user.name}
-        </h1>
-        <p className="mt-2 text-sm leading-6 text-zinc-600 dark:text-zinc-400">
-          Your email session is active. Refresh this page and you will stay
-          signed in.
-        </p>
-
-        <section className="mt-8 rounded-2xl border border-black/[.08] bg-white p-6 shadow-sm dark:border-white/[.145] dark:bg-zinc-950">
-          <div className="flex flex-col gap-6 sm:flex-row sm:items-center">
-            {user.image ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={user.image}
-                alt={`${user.name}'s profile`}
-                className="h-20 w-20 rounded-full object-cover"
-              />
-            ) : (
-              <div
-                aria-hidden="true"
-                className="flex h-20 w-20 items-center justify-center rounded-full bg-zinc-900 text-xl font-semibold text-white dark:bg-zinc-100 dark:text-zinc-950"
-              >
-                {initials || "SR"}
-              </div>
-            )}
-
-            <dl className="grid flex-1 gap-4 text-sm sm:grid-cols-3">
-              <div>
-                <dt className="font-medium text-zinc-500 dark:text-zinc-400">
-                  Name
-                </dt>
-                <dd className="mt-1 break-words text-zinc-950 dark:text-zinc-50">
-                  {user.name}
-                </dd>
-              </div>
-              <div>
-                <dt className="font-medium text-zinc-500 dark:text-zinc-400">
-                  Email
-                </dt>
-                <dd className="mt-1 break-all text-zinc-950 dark:text-zinc-50">
-                  {user.email}
-                </dd>
-              </div>
-              <div>
-                <dt className="font-medium text-zinc-500 dark:text-zinc-400">
-                  Role
-                </dt>
-                <dd className="mt-1 capitalize text-zinc-950 dark:text-zinc-50">
-                  {role}
-                </dd>
-              </div>
-            </dl>
-          </div>
-        </section>
+      <div className="mx-auto max-w-5xl px-6 py-10">
+        <Suspense fallback={<p role="status">Loading your dashboard…</p>}>
+          <DashboardContent searchParams={searchParams} />
+        </Suspense>
       </div>
     </main>
+  );
+}
+
+async function DashboardContent({ searchParams }: DashboardProps) {
+  const cookie = (await headers()).get("cookie");
+
+  if (!cookie) {
+    redirect(loginUrl);
+  }
+
+  const apiUrl = (
+    process.env.SETREADY_API_URL ?? "http://127.0.0.1:5000"
+  ).replace(/\/+$/, "");
+
+  const response = await fetch(`${apiUrl}/api/auth/get-session`, {
+    headers: { cookie },
+    cache: "no-store",
+  }).catch(() => null);
+
+  if (response?.status === 401) {
+    redirect(loginUrl);
+  }
+
+  if (!response?.ok) {
+    return (
+      <p role="alert" className="rounded-lg bg-red-50 p-4 text-red-800">
+        Could not load your session. Check that Express is running and refresh.
+      </p>
+    );
+  }
+
+  let session: DashboardSession | null;
+
+  try {
+    session = (await response.json()) as DashboardSession | null;
+  } catch {
+    return <p role="alert">Could not read your session. Refresh to try again.</p>;
+  }
+
+  if (!session?.user) {
+    redirect(loginUrl);
+  }
+
+  const { name, email, role } = session.user;
+  const { notice } = await searchParams;
+  const links =
+    role === "customer" || role === "owner" || role === "admin"
+      ? sections[role]
+      : [];
+
+  return (
+    <>
+      {notice === "signed-in" && (
+        <p role="status" className="mb-6 rounded-lg bg-green-50 p-4 text-green-800">
+          Signed in successfully.
+        </p>
+      )}
+
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">
+            Welcome, {name || "there"}
+          </h1>
+          <p className="mt-2 text-sm text-zinc-600">{email}</p>
+          {role && (
+            <p className="mt-1 text-sm font-semibold capitalize text-blue-700">
+              {role}
+            </p>
+          )}
+        </div>
+
+        <SignOutButton />
+      </div>
+
+      {links.length > 0 ? (
+        <nav aria-label="Dashboard sections" className="mt-8">
+          <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {links.map(({ label, href }) => (
+              <li key={href}>
+                <Link
+                  href={href}
+                  className="block h-full rounded-xl border border-zinc-200 bg-white p-5 font-semibold text-blue-700 hover:border-blue-600 hover:underline"
+                >
+                  {label}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </nav>
+      ) : (
+        <p className="mt-6 text-zinc-600">
+          No dashboard sections are available for this account.
+        </p>
+      )}
+    </>
   );
 }
