@@ -2,6 +2,8 @@ import Link from "next/link";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
+import DeleteEquipmentButton from "./delete-equipment-button";
+
 
 type Listing = {
   id: string;
@@ -110,22 +112,34 @@ async function OwnerEquipmentList() {
                 <th scope="col" className="p-4">Rental price</th>
                 <th scope="col" className="p-4">Quantity</th>
                 <th scope="col" className="p-4">Status</th>
+                <th scope="col" className="p-4">Actions</th>
               </tr>
             </thead>
             <tbody>
-              {result.data.map((listing) => (
-                <tr key={listing.id} className="border-t border-zinc-200">
-                  <th scope="row" className="p-4 font-medium">{listing.name}</th>
-                  <td className="p-4">{listing.category}</td>
-                  <td className="whitespace-nowrap p-4">
-                    {priceFormatter.format(listing.price)} /{" "}
-                    {rentalPeriods[listing.rentalType]}
-                  </td>
-                  <td className="p-4">{listing.quantity}</td>
-                  <td className="p-4 capitalize">{listing.status}</td>
-                </tr>
-              ))}
-            </tbody>
+  {result.data.map((listing) => (
+    <tr key={listing.id} className="border-t border-zinc-200">
+      <th scope="row" className="p-4 font-medium">
+        <Link
+          href={`/dashboard/owner/equipment/${listing.id}/edit`}
+          className="text-blue-700 hover:underline"
+        >
+          {listing.name}
+          <span className="sr-only"> (edit listing)</span>
+        </Link>
+      </th>
+      <td className="p-4">{listing.category}</td>
+      <td className="whitespace-nowrap p-4">
+        {priceFormatter.format(listing.price)} /{" "}
+        {rentalPeriods[listing.rentalType]}
+      </td>
+      <td className="p-4">{listing.quantity}</td>
+      <td className="p-4 capitalize">{listing.status}</td>
+      <td className="p-4">
+        <DeleteEquipmentButton id={listing.id} name={listing.name} />
+      </td>
+    </tr>
+  ))}
+</tbody>
           </table>
         </div>
       )}
