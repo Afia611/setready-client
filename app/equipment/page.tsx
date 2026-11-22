@@ -1,25 +1,6 @@
 import Link from "next/link";
-
-type Equipment = {
-  id: string;
-  name: string;
-  category: string;
-  location: string;
-  price: number;
-  rentalType: "daily" | "weekly" | "monthly";
-  quantity: number;
-};
-
-const priceFormatter = new Intl.NumberFormat("en-BD", {
-  style: "currency",
-  currency: "BDT",
-});
-
-const rentalPeriods = {
-  daily: "day",
-  weekly: "week",
-  monthly: "month",
-};
+import { Suspense } from "react";
+import EquipmentCatalog, { type Equipment } from "./equipment-catalog"; 
 
 async function getEquipment(): Promise<Equipment[]> {
   const apiUrl = (
@@ -38,60 +19,90 @@ async function getEquipment(): Promise<Equipment[]> {
   return result.data;
 }
 
-export default async function EquipmentPage() {
+function CatalogLoading() {
+  return (
+    <div role="status" className="mt-8">
+      <span className="sr-only">Loading equipment</span>
+      <div aria-hidden="true" className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+        {[1, 2, 3].map((card) => (
+          <div
+            key={card}
+            className="overflow-hidden rounded-2xl border border-stone-200 bg-white motion-safe:animate-pulse"
+          >
+            <div className="aspect-[16/10] bg-stone-200" />
+            <div className="space-y-3 p-5">
+              <div className="h-3 w-1/3 rounded bg-stone-200" />
+              <div className="h-5 w-3/4 rounded bg-stone-200" />
+              <div className="h-4 w-1/2 rounded bg-stone-200" />
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+async function CatalogContent() {
   const equipment = await getEquipment().catch(() => null);
 
-  return (
-    <main className="min-h-screen bg-stone-50 text-zinc-950">
-      <div className="mx-auto max-w-6xl px-6 py-12">
-        <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">
-          All Equipment
-        </h1>
-
-        {equipment === null ? (
-          <p role="alert" className="mt-6 text-zinc-600">
-            Equipment is unavailable right now. Refresh to try again.
-          </p>
-        ) : equipment.length === 0 ? (
-          <p className="mt-6 text-zinc-600">
-            No approved equipment is available yet.
-          </p>
-        ) : (
-          <ul className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {equipment.map((item) => (
-              <li
-                key={item.id}
-                className="flex flex-col rounded-xl border border-zinc-200 bg-white p-5"
-              >
-                <p className="text-sm font-medium text-blue-700">
-                  {item.category}
-                </p>
-                <h2 className="mt-2 text-xl font-semibold">{item.name}</h2>
-                <p className="mt-1 text-sm text-zinc-600">{item.location}</p>
-
-                <div className="mt-auto pt-4">
-                  <p className="font-semibold">
-                    {priceFormatter.format(item.price)} /{" "}
-                    {rentalPeriods[item.rentalType]}
-                  </p>
-                  <p className="mt-1 text-sm text-zinc-600">
-                    {item.quantity > 0
-                      ? `${item.quantity} units listed`
-                      : "Out of stock"}
-                  </p>
-                </div>
-
-                <Link
-                  href={`/equipment/${item.id}`}
-                  className="mt-4 self-start font-medium text-blue-700 hover:underline"
-                >
-                  View Details
-                </Link>
-              </li>
-            ))}
-          </ul>
-        )}
+  if (equipment === null) {
+    return (
+      <div className="mt-8 rounded-2xl border border-stone-200 bg-white p-6">
+        <p role="alert">Equipment is unavailable right now.</p>
+        <form action="/equipment" method="get" className="mt-4">
+          <button
+            type="submit"
+            className="rounded-lg bg-amber-300 px-4 py-2 font-semibold text-zinc-950 hover:bg-amber-400"
+          >
+            Try again
+          </button>
+        </form>
       </div>
-    </main>
+    );
+  }
+
+  return <EquipmentCatalog equipment={equipment} />;
+}
+
+export default function EquipmentPage() {
+  return (
+    <div className="min-h-screen bg-stone-50 text-zinc-950">
+      <header className="border-b border-stone-200 bg-white">
+        <nav
+          aria-label="Main navigation"
+          className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4 px-5 py-4 sm:px-6"
+        >
+          <Link href="/" className="text-xl font-bold tracking-tight">
+            Set<span className="text-amber-700">Ready</span>
+          </Link>
+
+          <div className="flex flex-wrap items-center gap-4 text-sm font-medium">
+            <Link
+              href="/equipment"
+              aria-current="page"
+              className="text-amber-800"
+            >
+              Browse equipment
+            </Link>
+            <Link href="/dashboard" className="hover:underline">
+              Dashboard
+            </Link>
+          </div>
+        </nav>
+      </header>
+
+      <main className="mx-auto max-w-6xl px-5 py-10 sm:px-6 sm:py-14">
+        <h1 className="text-4xl font-bold tracking-tight sm:text-5xl">
+          Browse equipment
+        </h1>
+        <p className="mt-3 text-base text-stone-600 sm:text-lg">
+          Find cameras, lighting, and production gear for your next shoot.
+        </p>
+
+        <Suspense fallback={<CatalogLoading />}>
+          <CatalogContent />
+        </Suspense>
+      </main>
+    </div>
   );
 }
