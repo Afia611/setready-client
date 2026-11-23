@@ -55,13 +55,13 @@ export default function Home() {
             </div>
           </div>
 
-          <div className="relative aspect-[4/3] overflow-hidden rounded-2xl border border-stone-200 bg-white">
+          <div className="relative aspect-4/3 overflow-hidden rounded-2xl border border-stone-200 bg-white">
             <Image
-              src="/images/sony-a7iv.jpg.jpg"
-              alt="Sony A7 IV camera kit"
+              src="/images/Hero.jpg"
+              alt="" 
               fill
               sizes="(max-width: 1024px) 100vw, 50vw"
-              className="object-contain p-6 sm:p-10"
+              className="object-cover"
               loading="eager"
               fetchPriority="high"
             />
