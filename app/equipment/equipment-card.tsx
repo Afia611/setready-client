@@ -83,7 +83,7 @@ export function EquipmentCard({
           </p>
           <p className="mt-1 text-sm text-stone-600">
             {item.quantity > 0
-              ? `${item.quantity} ${item.quantity === 1 ? "unit" : "units"} listed`
+              ? `${item.quantity} ${item.quantity === 1 ? "unit" : "units"} available`
               : "Out of stock"}
           </p>
         </div>

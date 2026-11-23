@@ -6,6 +6,9 @@ import { Suspense } from "react";
 type Rental = {
   id: string;
   equipmentId: string;
+  equipmentName: string;
+  createdAt: string;
+  paymentStatus: "paid" | "unpaid";
   startDate: string;
   endDate: string;
   quantity: number;
@@ -16,16 +19,18 @@ type Rental = {
 
 const statusLabels = {
   awaiting_payment: "Awaiting payment",
-  paid: "Paid",
+  paid: "Confirmed",
   expired: "Expired",
 };
+
+const bookingDate = new Intl.DateTimeFormat("en-GB", { dateStyle: "medium", timeZone: "Asia/Dhaka" });
 
 const loginUrl = "/login?next=%2Fdashboard%2Fmy-rentals";
 
 export default function MyRentalsPage() {
   return (
     <main className="min-h-screen bg-stone-50 px-6 py-10 text-zinc-950">
-      <div className="mx-auto max-w-4xl">
+      <div className="mx-auto max-w-6xl">
         <Link href="/dashboard" className="font-medium text-blue-700 hover:underline">
           Back to dashboard
         </Link>
@@ -87,28 +92,34 @@ async function RentalList() {
   }
 
   return (
-    <ul className="mt-6 grid gap-4 sm:grid-cols-2">
-      {rentals.map((rental) => (
-        <li key={rental.id} className="rounded-xl border border-zinc-200 bg-white p-5">
-          <p className="font-semibold">{statusLabels[rental.status]}</p>
-          <p className="mt-2">{rental.startDate} to {rental.endDate}</p>
-          <p className="text-sm text-zinc-600">
-            {rental.quantity} {rental.quantity === 1 ? "unit" : "units"}
-          </p>
-          <p className="mt-2 font-medium">
-            {new Intl.NumberFormat("en-BD", {
-              style: "currency",
-              currency: rental.currency.toUpperCase(),
-            }).format(rental.amountMinor / 100)}
-          </p>
-          <Link
-            href={`/equipment/${rental.equipmentId}`}
-            className="mt-3 inline-block text-sm text-blue-700 underline"
-          >
-            View equipment
-          </Link>
-        </li>
-      ))}
-    </ul>
+    <div className="mt-6 overflow-x-auto rounded-xl border border-zinc-200 bg-white">
+      <table className="w-full whitespace-nowrap text-left text-sm">
+        <thead className="bg-stone-100">
+          <tr>
+            {["Equipment Name", "Rental Start Date", "Rental End Date", "Booking Date", "Total Amount", "Payment Status", "Booking Status"].map((label) => (
+              <th key={label} scope="col" className="p-4">{label}</th>
+            ))}
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-zinc-200">
+          {rentals.map((rental) => (
+            <tr key={rental.id}>
+              <td className="p-4 font-semibold">{rental.equipmentName}</td>
+              <td className="p-4">{rental.startDate}</td>
+              <td className="p-4">{rental.endDate}</td>
+              <td className="p-4">{bookingDate.format(new Date(rental.createdAt))}</td>
+              <td className="p-4">
+                {new Intl.NumberFormat("en-BD", {
+                  style: "currency",
+                  currency: rental.currency.toUpperCase(),
+                }).format(rental.amountMinor / 100)}
+              </td>
+              <td className="p-4">{rental.paymentStatus === "paid" ? "Paid" : "Unpaid"}</td>
+              <td className="p-4">{statusLabels[rental.status]}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
   );
 }

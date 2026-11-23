@@ -51,16 +51,19 @@ const sections: Record<Role, { label: string; href: string }[]> = {
   customer: [
     { label: "My Rentals", href: "/dashboard/my-rentals" },
     { label: "Favorites", href: "/dashboard/favorites" },
+    { label: "Profile", href: "/dashboard/profile" },
   ],
   owner: [
     { label: "My Equipment", href: "/dashboard/owner/equipment" },
     { label: "Add Equipment", href: "/dashboard/owner/equipment/new" },
     { label: "My Equipment Rentals", href: "/dashboard/owner/rentals" },
+    { label: "My Profile", href: "/dashboard/profile" },
   ],
   admin: [
     { label: "Manage Users", href: "/dashboard/admin/users" },
     { label: "Pending Equipment", href: "/dashboard/admin/equipment" },
     { label: "All Equipment", href: "/dashboard/admin/equipment/all" },
+    { label: "Profile", href: "/dashboard/profile" },
   ],
 };
 

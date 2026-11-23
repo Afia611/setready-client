@@ -57,7 +57,7 @@ export function FavoriteButton({
         onClick={toggle}
         className="rounded-lg border border-zinc-300 px-4 py-2 text-sm font-semibold disabled:opacity-60"
       >
-        {busy ? "Saving…" : saved ? "Remove from favorites" : "Add to favorites"}
+        {busy ? "Saving…" : saved ? (refreshOnRemove ? "Remove Favorite" : "Remove from favorites") : "Add to favorites"}
       </button>
       {error && <p role="alert" className="mt-2 text-sm text-red-700">{error}</p>}
     </div>
@@ -68,20 +68,36 @@ export function FavoriteList({ items }: { items: FavoriteItem[] }) {
   if (!items.length) return <p className="mt-4">You haven’t saved any equipment yet.</p>;
 
   return (
-    <ul className="mt-6 space-y-3">
-      {items.map((item) => (
-        <li key={item.id} className="flex flex-wrap items-center justify-between gap-4 rounded-lg border p-4">
-          <div>
-            {item.available ? (
-              <Link href={`/equipment/${item.id}`} className="font-semibold text-blue-700 hover:underline">{item.name}</Link>
-            ) : (
-              <span className="font-semibold">{item.name} (unavailable)</span>
-            )}
-            <p className="mt-1 text-sm text-zinc-600">{item.category}</p>
-          </div>
-          <FavoriteButton equipmentId={item.id} initialSaved refreshOnRemove />
-        </li>
-      ))}
-    </ul>
+    <div className="mt-6 overflow-x-auto rounded-xl border border-zinc-200">
+      <table className="w-full min-w-[32rem] text-left text-sm">
+        <thead className="bg-stone-100">
+          <tr>
+            <th scope="col" className="p-4">Equipment</th>
+            <th scope="col" className="p-4">Category</th>
+            <th scope="col" className="p-4">Actions</th>
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-zinc-200">
+          {items.map((item) => (
+            <tr key={item.id}>
+              <td className="p-4 font-semibold">{item.name}</td>
+              <td className="p-4 text-zinc-600">{item.category}</td>
+              <td className="p-4">
+                <div className="flex flex-wrap items-center gap-3">
+                  {item.available ? (
+                    <Link href={`/equipment/${item.id}`} className="font-semibold text-blue-700 hover:underline">
+                      View Details
+                    </Link>
+                  ) : (
+                    <span className="text-zinc-600">Unavailable</span>
+                  )}
+                  <FavoriteButton equipmentId={item.id} initialSaved refreshOnRemove />
+                </div>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
   );
 }

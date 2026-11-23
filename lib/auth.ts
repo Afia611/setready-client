@@ -8,6 +8,9 @@ export type AuthUser = {
   image?: string | null;
   role?: string | null;
   emailVerified?: boolean;
+  contactEmail?: string;
+  phone?: string;
+  address?: string;
 };
 
 export type AuthSession = {

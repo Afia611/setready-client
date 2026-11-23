@@ -1,14 +1,22 @@
 import Link from "next/link";
 import { Suspense } from "react";
-import EquipmentCatalog, { type Equipment } from "./equipment-catalog"; 
-import { connection } from "next/server";
+import EquipmentCatalog, { type CatalogQuery } from "./equipment-catalog";
+import type { Equipment } from "./equipment-card";
 
-async function getEquipment(): Promise<Equipment[]> {
+type QueryParams = Promise<Record<string, string | string[] | undefined>>;
+const queryKeys = ["search", "category", "rentalType", "minPrice", "maxPrice", "availability", "sort"] as const;
+
+async function getEquipment(query: CatalogQuery): Promise<{ data: Equipment[]; categories: string[] }> {
   const apiUrl = (
     process.env.SETREADY_API_URL ?? "http://127.0.0.1:5000"
   ).replace(/\/+$/, "");
 
-  const response = await fetch(`${apiUrl}/api/equipment`, {
+  const url = new URL(`${apiUrl}/api/equipment`);
+  for (const [key, value] of Object.entries(query)) {
+    if (value) url.searchParams.set(key, value);
+  }
+
+  const response = await fetch(url, {
     cache: "no-store",
   });
 
@@ -16,8 +24,7 @@ async function getEquipment(): Promise<Equipment[]> {
     throw new Error(`Equipment API returned ${response.status}`);
   }
 
-  const result: { data: Equipment[] } = await response.json();
-  return result.data;
+  return response.json();
 }
 
 function CatalogLoading() {
@@ -43,11 +50,15 @@ function CatalogLoading() {
   );
 }
 
-async function CatalogContent() {
-  await connection();
-  const equipment = await getEquipment().catch(() => null);
+async function CatalogContent({ searchParams }: { searchParams: QueryParams }) {
+  const params = await searchParams;
+  const query: CatalogQuery = {};
+  for (const key of queryKeys) {
+    if (typeof params[key] === "string") query[key] = params[key];
+  }
+  const catalog = await getEquipment(query).catch(() => null);
 
-  if (equipment === null) {
+  if (catalog === null) {
     return (
       <div className="mt-8 rounded-2xl border border-stone-200 bg-white p-6">
         <p role="alert">Equipment is unavailable right now.</p>
@@ -63,10 +74,10 @@ async function CatalogContent() {
     );
   }
 
-  return <EquipmentCatalog equipment={equipment} />;
+  return <EquipmentCatalog equipment={catalog.data} categories={catalog.categories ?? []} query={query} />;
 }
 
-export default function EquipmentPage() {
+export default function EquipmentPage({ searchParams }: { searchParams: QueryParams }) {
   return (
     <div className="min-h-screen bg-stone-50 text-zinc-950">
       <header className="border-b border-stone-200 bg-white">
@@ -102,7 +113,7 @@ export default function EquipmentPage() {
         </p>
 
         <Suspense fallback={<CatalogLoading />}>
-          <CatalogContent />
+          <CatalogContent searchParams={searchParams} />
         </Suspense>
       </main>
     </div>
