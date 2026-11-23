@@ -134,10 +134,11 @@ async function OwnerRentalList({ searchParams }: { searchParams: RouteQuery }) {
           <thead className="bg-zinc-100">
             <tr>
               <th scope="col" className="p-4">Customer</th>
-            <th scope="col" className="p-4">Equipment</th>
+              <th scope="col" className="p-4">Equipment</th>
               <th scope="col" className="p-4">Rental duration</th>
               <th scope="col" className="p-4">Quantity</th>
               <th scope="col" className="p-4">Booking amount</th>
+              <th scope="col" className="p-4">Payment status</th>
               <th scope="col" className="p-4">Booking status</th>
             </tr>
           </thead>
