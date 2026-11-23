@@ -34,12 +34,14 @@ async function FavoritesContent() {
 
 export default function FavoritesPage() {
   return (
-    <main className="mx-auto max-w-3xl px-6 py-12">
-      <Link href="/dashboard" className="font-medium text-blue-700 hover:underline">Back to dashboard</Link>
-      <h1 className="mt-4 text-3xl font-bold">Favorite equipment</h1>
-      <Suspense fallback={<p role="status">Loading favorites…</p>}>
-        <FavoritesContent />
-      </Suspense>
+    <main className="min-h-screen w-full bg-stone-50 text-zinc-950">
+      <div className="mx-auto w-full max-w-5xl px-5 py-10 sm:px-8">
+        <Link href="/dashboard" className="font-medium text-blue-700 hover:underline">Back to dashboard</Link>
+        <h1 className="mt-4 text-3xl font-bold">Favorite equipment</h1>
+        <Suspense fallback={<p role="status">Loading favorites…</p>}>
+          <FavoritesContent />
+        </Suspense>
+      </div>
     </main>
   );
 }

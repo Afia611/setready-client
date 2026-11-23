@@ -55,7 +55,7 @@ export function FavoriteButton({
         type="button"
         disabled={busy || (refreshOnRemove && !saved)}
         onClick={toggle}
-        className="rounded-lg border border-zinc-300 px-4 py-2 text-sm font-semibold disabled:opacity-60"
+        className="rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-semibold text-zinc-950 hover:bg-stone-100 disabled:opacity-60"
       >
         {busy ? "Saving…" : saved ? (refreshOnRemove ? "Remove Favorite" : "Remove from favorites") : "Add to favorites"}
       </button>
@@ -68,9 +68,9 @@ export function FavoriteList({ items }: { items: FavoriteItem[] }) {
   if (!items.length) return <p className="mt-4">You haven’t saved any equipment yet.</p>;
 
   return (
-    <div className="mt-6 overflow-x-auto rounded-xl border border-zinc-200">
+    <div className="mt-6 overflow-x-auto rounded-xl border border-zinc-200 bg-white text-zinc-950">
       <table className="w-full min-w-[32rem] text-left text-sm">
-        <thead className="bg-stone-100">
+        <thead className="bg-stone-100 text-zinc-700">
           <tr>
             <th scope="col" className="p-4">Equipment</th>
             <th scope="col" className="p-4">Category</th>
