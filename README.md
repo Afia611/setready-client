@@ -1,36 +1,23 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+SetReady
+SetReady is an online equipment rental marketplace for filmmakers, photographers, and production teams. Customers can find gear from local owners, choose rental dates, and book online. Owners can list equipment and track their rentals, while administrators manage listings, users, and bookings.
+- Live website: setready-client.vercel.app
+- Live API: setready-server.onrender.com
+- Repositories: Client · Server
+Key features
+- Equipment catalog with server-side search, filters for category, rental type, price and availability, sorting, and pagination.
+- Customer dashboard with favorites, rental history, payment and booking statuses, and an editable profile.
+- Booking and payment with date and quantity availability checks, rental quotes, Stripe Checkout, and webhook-based payment confirmation.
+- Owner dashboard with equipment listing management, ImgBB photo uploads, rental records, and monthly earnings charts.
+- Admin dashboard with role management, listing approvals, rental monitoring, and platform analytics including monthly bookings.
+- Authentication and permissions with Better Auth sessions, JWT verification, and customer, owner, and admin access controls.
+- Automated rental completion using a scheduled job, with email notifications to renters and owners through Resend when configured.
+- Responsive interface with a light and dark theme preference saved locally, plus loading and error states.
+npm packages
+Scope	Packages
+Client	next, react, react-dom
+Client styling and tooling	tailwindcss, @tailwindcss/turbopack, typescript, eslint, eslint-config-next, @types/node, @types/react, @types/react-dom
+Server	express, mongodb, better-auth, @better-auth/mongo-adapter, jose, stripe, node-cron, dotenv
+Server tooling	typescript, tsx, @types/express, @types/node
 
-## Getting Started
 
-First, run the development server:
-
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
-
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
-
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+MongoDB stores application data. ImgBB and Resend are called over HTTP. The client is hosted on Vercel and the API on Render.
