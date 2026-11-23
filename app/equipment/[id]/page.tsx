@@ -3,6 +3,8 @@ import Link from "next/link";
 import { headers } from "next/headers";
 import { notFound, redirect } from "next/navigation";
 import { Suspense } from "react";
+import PublicFooter from "../../components/public-footer";
+import PublicHeader from "../../components/public-header";
 
 type Listing = {
   name: string;
@@ -26,17 +28,23 @@ export default function EquipmentDetailsPage({
   params: Promise<{ id: string }>;
 }) {
   return (
-    <main className="min-h-screen bg-stone-50 text-zinc-950">
-      <div className="mx-auto max-w-3xl px-6 py-12">
-        <Link href="/equipment" className="font-medium text-blue-700">
-          Back to equipment
-        </Link>
+    <div className="flex min-h-screen flex-col bg-stone-50 text-zinc-950">
+      <PublicHeader />
 
-        <Suspense fallback={<p className="mt-6" role="status">Loading equipmentâ€¦</p>}>
-          <EquipmentDetails params={params} />
-        </Suspense>
-      </div>
-    </main>
+      <main className="flex-1">
+        <div className="mx-auto max-w-3xl px-6 py-12">
+          <Link href="/equipment" className="font-medium text-blue-700">
+            Back to equipment
+          </Link>
+
+          <Suspense fallback={<p className="mt-6" role="status">Loading equipmentâ€¦</p>}>
+              <EquipmentDetails params={params} />
+          </Suspense>
+        </div>
+      </main>
+
+      <PublicFooter />
+    </div>
   );
 }
 
