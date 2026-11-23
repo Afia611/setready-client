@@ -1,4 +1,4 @@
-﻿import Link from "next/link";
+import Link from "next/link";
 
 export default function BookingSuccessPage() {
   return (
@@ -8,10 +8,10 @@ export default function BookingSuccessPage() {
         SetReady confirms your booking after verifying the payment with Stripe.
       </p>
       <Link
-        href="/dashboard"
+        href="/dashboard/my-rentals"
         className="mt-6 inline-block font-medium text-blue-700 hover:underline"
       >
-        Back to dashboard
+        View my rentals
       </Link>
     </main>
   );

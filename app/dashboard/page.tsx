@@ -48,7 +48,10 @@ type ChartBar = {
 };
 
 const sections: Record<Role, { label: string; href: string }[]> = {
-  customer: [{ label: "My Rentals", href: "/dashboard/my-rentals" }],
+  customer: [
+    { label: "My Rentals", href: "/dashboard/my-rentals" },
+    { label: "Favorites", href: "/dashboard/favorites" },
+  ],
   owner: [
     { label: "My Equipment", href: "/dashboard/owner/equipment" },
     { label: "Add Equipment", href: "/dashboard/owner/equipment/new" },

@@ -21,7 +21,7 @@ const buttonClass =
   "rounded-lg bg-blue-700 px-4 py-2 font-semibold text-white disabled:opacity-60";
 
 export default function BookingForm({ equipmentId }: { equipmentId: string }) {
-  const [open, setOpen] = useState(false);
+  const dialog = useRef<HTMLDialogElement>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [quote, setQuote] = useState<Quote | null>(null);
@@ -36,6 +36,9 @@ export default function BookingForm({ equipmentId }: { equipmentId: string }) {
     const startDate = String(form.get("startDate") ?? "");
     const endDate = String(form.get("endDate") ?? "");
     const quantity = Number(form.get("quantity"));
+    const contactNumber = String(form.get("contactNumber") ?? "").trim();
+    const deliveryAddress = String(form.get("deliveryAddress") ?? "").trim();
+    const notes = String(form.get("notes") ?? "").trim();
     const submitter = (event.nativeEvent as SubmitEvent).submitter;
     const wantsCheckout = submitter?.getAttribute("value") === "checkout";
 
@@ -86,7 +89,7 @@ export default function BookingForm({ equipmentId }: { equipmentId: string }) {
             "content-type": "application/json",
           },
           body: JSON.stringify(
-            wantsCheckout ? { ...rental, checkoutKey: checkoutKey.current } : rental,
+            wantsCheckout ? { ...rental, contactNumber, deliveryAddress, notes, checkoutKey: checkoutKey.current } : rental,
           ),
         },
       );
@@ -127,18 +130,23 @@ export default function BookingForm({ equipmentId }: { equipmentId: string }) {
   }
 
   return (
-    <section className="mt-6 border-t border-zinc-200 pt-6">
-      <button
-        type="button"
-        aria-expanded={open}
-        aria-controls="booking-form"
-        className={buttonClass}
-        onClick={() => setOpen((current) => !current)}
-      >
-        {open ? "Hide booking form" : "Book Now"}
+    <div>
+      <button type="button" className={buttonClass} onClick={() => dialog.current?.showModal()}>
+        Book Now
       </button>
 
-      <div id="booking-form" hidden={!open}>
+      <dialog
+        ref={dialog}
+        aria-labelledby="booking-heading"
+        className="m-auto max-h-[90dvh] w-[calc(100%-2rem)] max-w-2xl overflow-y-auto rounded-xl p-6 backdrop:bg-black/60"
+        onCancel={(event) => { if (busy) event.preventDefault(); }}
+      >
+        <div className="flex items-center justify-between gap-4">
+          <h2 id="booking-heading" className="text-xl font-bold">Book equipment</h2>
+          <button type="button" disabled={busy} onClick={() => dialog.current?.close()}>
+            Close
+          </button>
+        </div>
         <form
           onSubmit={submit}
           onChange={() => {
@@ -150,17 +158,17 @@ export default function BookingForm({ equipmentId }: { equipmentId: string }) {
         >
           <fieldset disabled={busy} className="grid gap-4 sm:grid-cols-3">
             <label className="text-sm font-medium">
-              Start date
+              Rental start date
               <input name="startDate" type="date" required className={inputClass} />
             </label>
 
             <label className="text-sm font-medium">
-              End date
+              Rental end date
               <input name="endDate" type="date" required className={inputClass} />
             </label>
 
             <label className="text-sm font-medium">
-              Quantity
+              Required quantity
               <input
                 name="quantity"
                 type="number"
@@ -170,6 +178,19 @@ export default function BookingForm({ equipmentId }: { equipmentId: string }) {
                 required
                 className={inputClass}
               />
+            </label>
+
+            <label className="text-sm font-medium sm:col-span-3">
+              Contact number
+              <input name="contactNumber" type="tel" required maxLength={25} className={inputClass} />
+            </label>
+            <label className="text-sm font-medium sm:col-span-3">
+              Delivery address
+              <textarea name="deliveryAddress" required maxLength={500} className={inputClass} />
+            </label>
+            <label className="text-sm font-medium sm:col-span-3">
+              Additional notes (optional)
+              <textarea name="notes" maxLength={1000} className={inputClass} />
             </label>
 
             <div className="flex flex-wrap gap-3 sm:col-span-3">
@@ -203,7 +224,7 @@ export default function BookingForm({ equipmentId }: { equipmentId: string }) {
             </div>
           )}
         </form>
-      </div>
-    </section>
+      </dialog>
+    </div>
   );
 }

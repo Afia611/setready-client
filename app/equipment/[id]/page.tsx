@@ -1,4 +1,6 @@
-﻿import BookingForm from "./booking-form";
+import { FavoriteButton } from "../../components/favorites";
+import { EquipmentPhoto } from "../equipment-card";
+import BookingForm from "./booking-form";
 import Link from "next/link";
 import { headers } from "next/headers";
 import { notFound, redirect } from "next/navigation";
@@ -7,6 +9,10 @@ import PublicFooter from "../../components/public-footer";
 import PublicHeader from "../../components/public-header";
 
 type Listing = {
+  imageUrl?: string;
+  ownerName?: string;
+  isCustomer?: boolean;
+  isFavorite?: boolean;
   name: string;
   description: string;
   category: string;
@@ -37,7 +43,7 @@ export default function EquipmentDetailsPage({
             Back to equipment
           </Link>
 
-          <Suspense fallback={<p className="mt-6" role="status">Loading equipmentâ€¦</p>}>
+          <Suspense fallback={<p className="mt-6" role="status">Loading equipment…</p>}>
               <EquipmentDetails params={params} />
           </Suspense>
         </div>
@@ -120,13 +126,22 @@ async function EquipmentDetails({
       <p className="mt-1 text-zinc-600">{listing.location}</p>
       <p className="mt-4 font-semibold">{price} / {periods[listing.rentalType]}</p>
       <p className="mt-1 text-sm text-zinc-600">{listing.quantity} units listed</p>
+      <div className="mt-5 overflow-hidden rounded-lg">
+        <EquipmentPhoto item={listing} />
+      </div>
       <p className="mt-5">{listing.description}</p>
+      <p className="mt-3 text-sm text-zinc-600">Owner: {listing.ownerName ?? "Name unavailable"}</p>
       <p className="mt-3 text-sm text-zinc-600">
-        {listing.brand} {listing.model} Â· {listing.condition}
+        {listing.brand} {listing.model} · {listing.condition}
       </p>
       <h2 className="mt-6 text-lg font-semibold">Rental terms</h2>
       <p className="mt-2 whitespace-pre-line">{listing.rentalTerms}</p>
-      <BookingForm equipmentId={id} />
+      {listing.isCustomer && (
+        <div className="mt-6 flex flex-wrap items-start gap-3 border-t border-zinc-200 pt-6">
+          <BookingForm equipmentId={id.toLowerCase()} />
+          <FavoriteButton equipmentId={id} initialSaved={Boolean(listing.isFavorite)} />
+        </div>
+      )}
     </article>
   );
 }

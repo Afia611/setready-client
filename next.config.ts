@@ -10,6 +10,10 @@ const nextConfig: NextConfig = {
   async rewrites() {
     return [
       {
+        source: "/api/favorites/:path*",
+        destination: `${apiUrl}/api/favorites/:path*`,
+      },
+      {
         source: "/api/auth/:path*",
         destination: `${apiUrl}/api/auth/:path*`,
       },
