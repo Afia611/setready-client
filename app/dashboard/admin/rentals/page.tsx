@@ -1,12 +1,19 @@
+import CompleteRentalButton from "./complete-rental-button";
 import Link from "next/link";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
 import Pagination, { pageParam, type PageInfo, type RouteQuery } from "@/app/components/pagination";
 
+type Person = { name: string; email: string };
+
 type Rental = {
   id: string;
   equipmentName: string;
+  customer: Person | null;
+  paymentStatus: "paid" | "unpaid";
+  owner: Person | null;
+  canComplete: boolean;
   startDate: string;
   endDate: string;
   quantity: number;
@@ -17,7 +24,7 @@ type Rental = {
 
 const statusLabels: Record<Rental["status"], string> = {
   awaiting_payment: "Awaiting payment",
-  paid: "Paid",
+  paid: "Confirmed",
   expired: "Expired",
   completed: "Completed",
 };
@@ -92,19 +99,32 @@ async function AdminRentalList({ searchParams }: { searchParams: RouteQuery }) {
         <table className="w-full text-left text-sm">
           <thead className="bg-zinc-100">
             <tr>
-              <th scope="col" className="p-4">Equipment</th>
-              <th scope="col" className="p-4">Rental dates</th>
+              <th scope="col" className="p-4">Customer</th>
+            <th scope="col" className="p-4">Owner</th>
+            <th scope="col" className="p-4">Equipment</th>
+              <th scope="col" className="p-4">Rental duration</th>
               <th scope="col" className="p-4">Quantity</th>
-              <th scope="col" className="p-4">Total</th>
+              <th scope="col" className="p-4">Booking amount</th>
               <th scope="col" className="p-4">Booking status</th>
             </tr>
           </thead>
           <tbody>
             {result.data.map((rental) => (
               <tr key={rental.id} className="border-t border-zinc-200">
-                <td className="p-4 font-medium">{rental.equipmentName}</td>
+                <td className="p-4">
+                <p className="font-medium">{rental.customer?.name ?? "Unavailable"}</p>
+                {rental.customer?.email && <p className="text-zinc-600">{rental.customer.email}</p>}
+              </td>
+              <td className="p-4">
+                <p className="font-medium">{rental.owner?.name ?? "Unavailable"}</p>
+                {rental.owner?.email && <p className="text-zinc-600">{rental.owner.email}</p>}
+              </td>
+              <td className="p-4 font-medium">{rental.equipmentName}</td>
                 <td className="whitespace-nowrap p-4">
                   {rental.startDate} to {rental.endDate}
+                  <p className="text-zinc-600">
+                    {Math.round((Date.parse(rental.endDate) - Date.parse(rental.startDate)) / 86_400_000) + 1} days
+                  </p>
                 </td>
                 <td className="p-4">{rental.quantity}</td>
                 <td className="whitespace-nowrap p-4">
@@ -113,7 +133,11 @@ async function AdminRentalList({ searchParams }: { searchParams: RouteQuery }) {
                     currency: rental.currency.toUpperCase(),
                   }).format(rental.amountMinor / 100)}
                 </td>
-                <td className="whitespace-nowrap p-4">{statusLabels[rental.status]}</td>
+                <td className="whitespace-nowrap p-4">{rental.paymentStatus === "paid" ? "Paid" : "Unpaid"}</td>
+              <td className="whitespace-nowrap p-4">{statusLabels[rental.status]}</td>
+              <td className="p-4">
+                {rental.canComplete ? <CompleteRentalButton id={rental.id} /> : "—"}
+              </td>
               </tr>
             ))}
           </tbody>

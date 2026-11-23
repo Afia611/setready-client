@@ -10,6 +10,14 @@ const nextConfig: NextConfig = {
   async rewrites() {
     return [
       {
+        source: "/api/owner/equipment/image",
+        destination: `${apiUrl}/api/owner/equipment/image`,
+      },
+      {
+        source: "/api/admin/rentals/:id/complete",
+        destination: `${apiUrl}/api/admin/rentals/:id/complete`,
+      },
+      {
         source: "/api/favorites/:path*",
         destination: `${apiUrl}/api/favorites/:path*`,
       },

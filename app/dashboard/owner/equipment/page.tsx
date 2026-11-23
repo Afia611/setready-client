@@ -120,13 +120,7 @@ async function OwnerEquipmentList() {
   {result.data.map((listing) => (
     <tr key={listing.id} className="border-t border-zinc-200">
       <th scope="row" className="p-4 font-medium">
-        <Link
-          href={`/dashboard/owner/equipment/${listing.id}/edit`}
-          className="text-blue-700 hover:underline"
-        >
-          {listing.name}
-          <span className="sr-only"> (edit listing)</span>
-        </Link>
+        {listing.name}
       </th>
       <td className="p-4">{listing.category}</td>
       <td className="whitespace-nowrap p-4">
@@ -136,7 +130,15 @@ async function OwnerEquipmentList() {
       <td className="p-4">{listing.quantity}</td>
       <td className="p-4 capitalize">{listing.status}</td>
       <td className="p-4">
-        <DeleteEquipmentButton id={listing.id} name={listing.name} />
+        <div className="flex flex-wrap items-center gap-3">
+          <Link href={`/dashboard/owner/equipment/${listing.id}`} className="text-blue-700 hover:underline">
+            View Details
+          </Link>
+          <Link href={`/dashboard/owner/equipment/${listing.id}/edit`} className="text-blue-700 hover:underline">
+            Update
+          </Link>
+          <DeleteEquipmentButton id={listing.id} name={listing.name} />
+        </div>
       </td>
     </tr>
   ))}

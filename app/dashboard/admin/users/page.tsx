@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { useEffect, useState, type FormEvent } from "react";
 
+const dateFormat = new Intl.DateTimeFormat("en-GB", { dateStyle: "medium", timeZone: "Asia/Dhaka" });
+
 const roles = ["customer", "owner", "admin"] as const;
 
 type Role = (typeof roles)[number];
@@ -12,6 +14,7 @@ type User = {
   name: string;
   email: string;
   role: Role;
+  createdAt?: string | null;
 };
 
 async function requestUsers(path: string, options: RequestInit = {}) {
@@ -133,6 +136,7 @@ export default function AdminUsersPage() {
                   <th scope="col" className="p-4">Name</th>
                   <th scope="col" className="p-4">Email</th>
                   <th scope="col" className="p-4">Current role</th>
+                  <th scope="col" className="p-4">Registration Date</th>
                   <th scope="col" className="p-4">Change role</th>
                 </tr>
               </thead>
@@ -142,6 +146,7 @@ export default function AdminUsersPage() {
                     <td className="p-4 font-medium">{user.name}</td>
                     <td className="p-4">{user.email}</td>
                     <td className="p-4 capitalize">{user.role}</td>
+                    <td className="p-4">{user.createdAt ? dateFormat.format(new Date(user.createdAt)) : "Unavailable"}</td>
                     <td className="p-4">
                       <form
                         onSubmit={(event) => void saveRole(event, user)}

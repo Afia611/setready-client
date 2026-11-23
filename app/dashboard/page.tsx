@@ -60,10 +60,11 @@ const sections: Record<Role, { label: string; href: string }[]> = {
     { label: "My Profile", href: "/dashboard/profile" },
   ],
   admin: [
-    { label: "Manage Users", href: "/dashboard/admin/users" },
+    { label: "All Users", href: "/dashboard/admin/users" },
+    { label: "All Rentals", href: "/dashboard/admin/rentals" },
     { label: "Pending Equipment", href: "/dashboard/admin/equipment" },
     { label: "All Equipment", href: "/dashboard/admin/equipment/all" },
-    { label: "Profile", href: "/dashboard/profile" },
+    { label: "My Profile", href: "/dashboard/profile" },
   ],
 };
 

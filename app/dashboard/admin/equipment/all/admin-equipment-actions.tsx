@@ -7,22 +7,22 @@ import { useState } from "react";
 export default function AdminEquipmentActions({
   id,
   name,
-  active,
+  status,
 }: {
   id: string;
   name: string;
-  active: boolean;
+  status: "pending" | "approved" | "rejected" | "archived";
 }) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
 
-  if (!active) {
+  if (status === "archived") {
     return <span className="text-zinc-500">Archived</span>;
   }
 
-  async function archiveListing() {
-    if (!window.confirm(`Archive "${name}"? It will be removed from the public catalog.`)) {
+  async function changeListing(action: "approved" | "rejected" | "archive") {
+    if (action === "archive" && !window.confirm(`Archive "${name}"? It will be removed from the public catalog.`)) {
       return;
     }
 
@@ -39,11 +39,16 @@ export default function AdminEquipmentActions({
         throw new Error("Please sign in as an Admin again.");
       }
 
+      const encodedId = encodeURIComponent(id);
       const response = await fetch(
-        `/api/admin/equipment/${encodeURIComponent(id)}`,
+        action === "archive" ? `/api/admin/equipment/${encodedId}` : `/api/admin/equipment?id=${encodedId}`,
         {
-          method: "DELETE",
-          headers: { authorization: `Bearer ${auth.token}` },
+          method: action === "archive" ? "DELETE" : "PATCH",
+          headers: {
+            authorization: `Bearer ${auth.token}`,
+            "content-type": "application/json",
+          },
+          body: action === "archive" ? undefined : JSON.stringify({ status: action }),
         },
       );
 
@@ -52,7 +57,7 @@ export default function AdminEquipmentActions({
           .json()
           .catch(() => null);
 
-        throw new Error(result?.message ?? "Could not archive the listing.");
+        throw new Error(result?.message ?? "Could not update the listing.");
       }
 
       router.refresh();
@@ -60,8 +65,9 @@ export default function AdminEquipmentActions({
       setError(
         failure instanceof Error
           ? failure.message
-          : "Could not archive the listing.",
+          : "Could not update the listing.",
       );
+    } finally {
       setBusy(false);
     }
   }
@@ -69,19 +75,31 @@ export default function AdminEquipmentActions({
   return (
     <div>
       <div className="flex flex-wrap items-center gap-2">
+        {status === "pending" && (
+          <>
+            <button type="button" disabled={busy} onClick={() => changeListing("approved")}
+              className="rounded-lg border border-emerald-300 px-3 py-2 font-medium text-emerald-800 disabled:opacity-60">
+              Approve
+            </button>
+            <button type="button" disabled={busy} onClick={() => changeListing("rejected")}
+              className="rounded-lg border border-red-200 px-3 py-2 font-medium text-red-800 disabled:opacity-60">
+              Reject
+            </button>
+          </>
+        )}
         <Link
           href={`/dashboard/admin/equipment/${encodeURIComponent(id)}/edit`}
           className="rounded-lg border border-zinc-300 px-3 py-2 font-medium hover:bg-zinc-50"
         >
-          Edit
+          Update
         </Link>
         <button
           type="button"
           disabled={busy}
-          onClick={archiveListing}
+          onClick={() => changeListing("archive")}
           className="rounded-lg border border-red-200 px-3 py-2 font-medium text-red-700 hover:bg-red-50 disabled:opacity-60"
         >
-          {busy ? "Archiving…" : "Archive"}
+          Delete
         </button>
       </div>
       {error && <p role="alert" className="mt-1 text-sm text-red-700">{error}</p>}

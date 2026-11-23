@@ -127,7 +127,7 @@ async function AdminEquipmentList() {
                     <AdminEquipmentActions
                       id={listing.id}
                       name={listing.name}
-                      active={listing.status !== "archived"}
+                      status={listing.status}
                     />
                   </td>
                 </tr>
