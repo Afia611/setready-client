@@ -2,6 +2,7 @@ import Link from "next/link";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
+import AdminEquipmentActions from "./admin-equipment-actions";
 
 type EquipmentListing = {
   id: string;
@@ -109,6 +110,7 @@ async function AdminEquipmentList() {
                 <th scope="col" className="p-4">Rental price</th>
                 <th scope="col" className="p-4">Quantity</th>
                 <th scope="col" className="p-4">Status</th>
+                <th scope="col" className="p-4">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -121,6 +123,13 @@ async function AdminEquipmentList() {
                   </td>
                   <td className="p-4">{listing.quantity}</td>
                   <td className="p-4 capitalize">{listing.status}</td>
+                  <td className="p-4">
+                    <AdminEquipmentActions
+                      id={listing.id}
+                      name={listing.name}
+                      active={listing.status !== "archived"}
+                    />
+                  </td>
                 </tr>
               ))}
             </tbody>
