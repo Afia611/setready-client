@@ -2,7 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import PublicFooter from "./components/public-footer";
 import PublicHeader from "./components/public-header";
-import HomeBenefitsReviews from "./components/home-benefits-reviews";
+
 
 const steps = [
   {
@@ -61,7 +61,7 @@ export default function Home() {
               >
                 Browse equipment
               </Link>
-              <HomeBenefitsReviews />
+              
               <a
                 href="#how-it-works"
                 className="font-medium text-amber-800 hover:underline"
