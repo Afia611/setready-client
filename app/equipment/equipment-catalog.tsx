@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Pagination, { type PageInfo } from "../components/pagination";
 import { EquipmentCard, type Equipment } from "./equipment-card";
 
 export type CatalogQuery = Partial<Record<
@@ -12,11 +13,15 @@ export default function EquipmentCatalog({
   equipment,
   categories,
   query,
+  pagination,
 }: {
   equipment: Equipment[];
   categories: string[];
   query: CatalogQuery;
+  pagination?: PageInfo;
 }) {
+  const total = pagination?.total ?? equipment.length;
+
   return (
     <>
       <form action="/equipment" method="get" aria-label="Equipment filters"
@@ -68,7 +73,7 @@ export default function EquipmentCatalog({
             </select>
           </label>
           <div className="flex flex-wrap items-end gap-3">
-            <button type="submit" className="rounded-lg bg-amber-300 px-4 py-2 font-semibold hover:bg-amber-400">
+            <button type="submit" className="rounded-lg bg-amber-300 px-4 py-2 font-semibold text-zinc-950 hover:bg-amber-400">
               Apply
             </button>
             <Link href="/equipment" className="px-2 py-2 text-sm font-semibold text-amber-800 hover:underline">
@@ -78,7 +83,7 @@ export default function EquipmentCatalog({
         </div>
       </form>
       <p role="status" className="mt-7 text-sm font-medium text-stone-600">
-        {equipment.length} {equipment.length === 1 ? "listing" : "listings"}
+        {total} {total === 1 ? "listing" : "listings"}
       </p>
       {equipment.length === 0 ? (
         <p className="mt-4 rounded-2xl border border-stone-200 bg-white p-6">
@@ -93,6 +98,7 @@ export default function EquipmentCatalog({
           ))}
         </ul>
       )}
+      <Pagination path="/equipment" query={query} pagination={pagination} />
     </>
   );
 }

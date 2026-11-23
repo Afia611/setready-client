@@ -2,32 +2,34 @@ import Link from "next/link";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
+import Pagination, { pageParam, type PageInfo, type RouteQuery } from "@/app/components/pagination";
 
 type Rental = {
   id: string;
   equipmentId: string;
-  equipmentName: string;
-  createdAt: string;
-  paymentStatus: "paid" | "unpaid";
+  equipmentName?: string;
+  createdAt?: string;
+  paymentStatus?: "paid" | "unpaid";
   startDate: string;
   endDate: string;
   quantity: number;
   amountMinor: number;
   currency: string;
-  status: "awaiting_payment" | "paid" | "expired";
+  status: "awaiting_payment" | "paid" | "expired" | "completed";
 };
 
 const statusLabels = {
   awaiting_payment: "Awaiting payment",
   paid: "Confirmed",
   expired: "Expired",
+  completed: "Completed",
 };
 
 const bookingDate = new Intl.DateTimeFormat("en-GB", { dateStyle: "medium", timeZone: "Asia/Dhaka" });
 
 const loginUrl = "/login?next=%2Fdashboard%2Fmy-rentals";
 
-export default function MyRentalsPage() {
+export default function MyRentalsPage({ searchParams }: { searchParams: RouteQuery }) {
   return (
     <main className="min-h-screen bg-stone-50 px-6 py-10 text-zinc-950">
       <div className="mx-auto max-w-6xl">
@@ -36,14 +38,14 @@ export default function MyRentalsPage() {
         </Link>
         <h1 className="mt-4 text-3xl font-bold">My Rentals</h1>
         <Suspense fallback={<p role="status" className="mt-4">Loading rentals…</p>}>
-          <RentalList />
+          <RentalList searchParams={searchParams} />
         </Suspense>
       </div>
     </main>
   );
 }
 
-async function RentalList() {
+async function RentalList({ searchParams }: { searchParams: RouteQuery }) {
   const cookie = (await headers()).get("cookie");
   if (!cookie) redirect(loginUrl);
 
@@ -65,7 +67,8 @@ async function RentalList() {
   const { token } = (await session.json()) as { token?: string };
   if (!token) redirect(loginUrl);
 
-  const response = await fetch(`${apiUrl}/api/bookings/mine`, {
+  const page = pageParam((await searchParams).page);
+  const response = await fetch(`${apiUrl}/api/bookings/mine?page=${encodeURIComponent(page)}`, {
     headers: { authorization: `Bearer ${token}` },
     cache: "no-store",
   }).catch(() => null);
@@ -80,7 +83,7 @@ async function RentalList() {
     return <p role="alert" className="mt-4">Could not load rentals. Refresh to try again.</p>;
   }
 
-  const { data: rentals } = (await response.json()) as { data: Rental[] };
+  const { data: rentals, pagination } = (await response.json()) as { data: Rental[]; pagination?: PageInfo };
 
   if (!rentals.length) {
     return (
@@ -92,34 +95,41 @@ async function RentalList() {
   }
 
   return (
-    <div className="mt-6 overflow-x-auto rounded-xl border border-zinc-200 bg-white">
-      <table className="w-full whitespace-nowrap text-left text-sm">
-        <thead className="bg-stone-100">
-          <tr>
-            {["Equipment Name", "Rental Start Date", "Rental End Date", "Booking Date", "Total Amount", "Payment Status", "Booking Status"].map((label) => (
-              <th key={label} scope="col" className="p-4">{label}</th>
-            ))}
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-zinc-200">
-          {rentals.map((rental) => (
-            <tr key={rental.id}>
-              <td className="p-4 font-semibold">{rental.equipmentName}</td>
-              <td className="p-4">{rental.startDate}</td>
-              <td className="p-4">{rental.endDate}</td>
-              <td className="p-4">{bookingDate.format(new Date(rental.createdAt))}</td>
-              <td className="p-4">
-                {new Intl.NumberFormat("en-BD", {
-                  style: "currency",
-                  currency: rental.currency.toUpperCase(),
-                }).format(rental.amountMinor / 100)}
-              </td>
-              <td className="p-4">{rental.paymentStatus === "paid" ? "Paid" : "Unpaid"}</td>
-              <td className="p-4">{statusLabels[rental.status]}</td>
+    <>
+      <div className="mt-6 overflow-x-auto rounded-xl border border-zinc-200 bg-white">
+        <table className="w-full whitespace-nowrap text-left text-sm">
+          <thead className="bg-stone-100">
+            <tr>
+              {["Equipment Name", "Rental Start Date", "Rental End Date", "Booking Date", "Total Amount", "Payment Status", "Booking Status"].map((label) => (
+                <th key={label} scope="col" className="p-4">{label}</th>
+              ))}
             </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+          </thead>
+          <tbody className="divide-y divide-zinc-200">
+            {rentals.map((rental) => {
+              const isPaid = rental.paymentStatus === "paid"
+                || rental.status === "paid" || rental.status === "completed";
+              return (
+                <tr key={rental.id}>
+                  <td className="p-4 font-semibold">{rental.equipmentName ?? "Equipment"}</td>
+                  <td className="p-4">{rental.startDate}</td>
+                  <td className="p-4">{rental.endDate}</td>
+                  <td className="p-4">{rental.createdAt ? bookingDate.format(new Date(rental.createdAt)) : "—"}</td>
+                  <td className="p-4">
+                    {new Intl.NumberFormat("en-BD", {
+                      style: "currency",
+                      currency: rental.currency.toUpperCase(),
+                    }).format(rental.amountMinor / 100)}
+                  </td>
+                  <td className="p-4">{isPaid ? "Paid" : "Unpaid"}</td>
+                  <td className="p-4">{statusLabels[rental.status]}</td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+      <Pagination path="/dashboard/my-rentals" pagination={pagination} />
+    </>
   );
 }

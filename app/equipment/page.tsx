@@ -1,12 +1,12 @@
 import Link from "next/link";
 import { Suspense } from "react";
 import EquipmentCatalog, { type CatalogQuery } from "./equipment-catalog";
+import { pageParam, type PageInfo, type RouteQuery } from "../components/pagination";
 import type { Equipment } from "./equipment-card";
 
-type QueryParams = Promise<Record<string, string | string[] | undefined>>;
 const queryKeys = ["search", "category", "rentalType", "minPrice", "maxPrice", "availability", "sort"] as const;
 
-async function getEquipment(query: CatalogQuery): Promise<{ data: Equipment[]; categories: string[] }> {
+async function getEquipment(query: CatalogQuery, page: string): Promise<{ data: Equipment[]; categories: string[]; pagination?: PageInfo }> {
   const apiUrl = (
     process.env.SETREADY_API_URL ?? "http://127.0.0.1:5000"
   ).replace(/\/+$/, "");
@@ -15,6 +15,8 @@ async function getEquipment(query: CatalogQuery): Promise<{ data: Equipment[]; c
   for (const [key, value] of Object.entries(query)) {
     if (value) url.searchParams.set(key, value);
   }
+
+  url.searchParams.set("page", page);
 
   const response = await fetch(url, {
     cache: "no-store",
@@ -50,13 +52,13 @@ function CatalogLoading() {
   );
 }
 
-async function CatalogContent({ searchParams }: { searchParams: QueryParams }) {
+async function CatalogContent({ searchParams }: { searchParams: RouteQuery }) {
   const params = await searchParams;
   const query: CatalogQuery = {};
   for (const key of queryKeys) {
     if (typeof params[key] === "string") query[key] = params[key];
   }
-  const catalog = await getEquipment(query).catch(() => null);
+  const catalog = await getEquipment(query, pageParam(params.page)).catch(() => null);
 
   if (catalog === null) {
     return (
@@ -74,10 +76,10 @@ async function CatalogContent({ searchParams }: { searchParams: QueryParams }) {
     );
   }
 
-  return <EquipmentCatalog equipment={catalog.data} categories={catalog.categories ?? []} query={query} />;
+  return <EquipmentCatalog equipment={catalog.data} categories={catalog.categories ?? []} query={query} pagination={catalog.pagination} />;
 }
 
-export default function EquipmentPage({ searchParams }: { searchParams: QueryParams }) {
+export default function EquipmentPage({ searchParams }: { searchParams: RouteQuery }) {
   return (
     <div className="min-h-screen bg-stone-50 text-zinc-950">
       <header className="border-b border-stone-200 bg-white">
