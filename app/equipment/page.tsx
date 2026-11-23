@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Suspense } from "react";
 import EquipmentCatalog, { type Equipment } from "./equipment-catalog"; 
+import { connection } from "next/server";
 
 async function getEquipment(): Promise<Equipment[]> {
   const apiUrl = (
@@ -43,6 +44,7 @@ function CatalogLoading() {
 }
 
 async function CatalogContent() {
+  await connection();
   const equipment = await getEquipment().catch(() => null);
 
   if (equipment === null) {

@@ -3,7 +3,7 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
 import DeleteEquipmentButton from "./delete-equipment-button";
-
+import { connection } from "next/server";
 
 type Listing = {
   id: string;
@@ -46,6 +46,7 @@ export default function MyEquipmentPage() {
 }
 
 async function OwnerEquipmentList() {
+  await connection();
   const cookie = (await headers()).get("cookie");
   if (!cookie) redirect(loginUrl);
 
