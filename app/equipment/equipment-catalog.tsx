@@ -29,7 +29,7 @@ export default function EquipmentCatalog({
       >
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <label className="text-sm font-semibold">
-            Search by equipment name or location
+            Search by equipment name, category, location, or brand
             <input name="search" type="search" defaultValue={query.search} maxLength={120} className={control} />
           </label>
           <label className="text-sm font-semibold">
