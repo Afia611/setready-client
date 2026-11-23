@@ -1,8 +1,7 @@
+import Link from "next/link";
 import { Suspense } from "react";
+import EquipmentCatalog, { type Equipment } from "./equipment-catalog"; 
 import { connection } from "next/server";
-import PublicFooter from "../components/public-footer";
-import PublicHeader from "../components/public-header";
-import EquipmentCatalog, { type Equipment } from "./equipment-catalog";
 
 async function getEquipment(): Promise<Equipment[]> {
   const apiUrl = (
@@ -69,10 +68,32 @@ async function CatalogContent() {
 
 export default function EquipmentPage() {
   return (
-    <div className="flex min-h-screen flex-col bg-stone-50 text-zinc-950">
-      <PublicHeader />
+    <div className="min-h-screen bg-stone-50 text-zinc-950">
+      <header className="border-b border-stone-200 bg-white">
+        <nav
+          aria-label="Main navigation"
+          className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4 px-5 py-4 sm:px-6"
+        >
+          <Link href="/" className="text-xl font-bold tracking-tight">
+            Set<span className="text-amber-700">Ready</span>
+          </Link>
 
-      <main className="mx-auto w-full max-w-6xl flex-1 px-5 py-10 sm:px-6 sm:py-14">
+          <div className="flex flex-wrap items-center gap-4 text-sm font-medium">
+            <Link
+              href="/equipment"
+              aria-current="page"
+              className="text-amber-800"
+            >
+              Browse equipment
+            </Link>
+            <Link href="/dashboard" className="hover:underline">
+              Dashboard
+            </Link>
+          </div>
+        </nav>
+      </header>
+
+      <main className="mx-auto max-w-6xl px-5 py-10 sm:px-6 sm:py-14">
         <h1 className="text-4xl font-bold tracking-tight sm:text-5xl">
           Browse equipment
         </h1>
@@ -84,8 +105,6 @@ export default function EquipmentPage() {
           <CatalogContent />
         </Suspense>
       </main>
-
-      <PublicFooter />
     </div>
   );
 }

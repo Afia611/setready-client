@@ -1,7 +1,7 @@
-import Link from "next/link";
 import { headers } from "next/headers";
+import Link from "next/link";
 import { redirect } from "next/navigation";
-import { Suspense } from "react";
+import { Suspense, type ReactNode } from "react";
 import { SignOutButton } from "./sign-out-button";
 
 type DashboardProps = {
@@ -17,11 +17,38 @@ type DashboardSession = {
 };
 
 type Role = "customer" | "owner" | "admin";
+type AnalyticsRole = "admin" | "owner";
+
+type MoneyTotal = {
+  currency: string;
+  amountMinor: number;
+};
+
+type AdminAnalytics = {
+  totalUsers: number;
+  totalEquipment: number;
+  totalBookings: number;
+  pendingApprovals: number;
+  completedRentals: number;
+  totalRevenue: MoneyTotal[];
+  monthlyBookings: { month: string; count: number }[];
+};
+
+type OwnerAnalytics = {
+  totalListedEquipment: number;
+  completedRentals: number;
+  totalEarnings: MoneyTotal[];
+  monthlyEarnings: (MoneyTotal & { month: string })[];
+};
+
+type ChartBar = {
+  month: string;
+  value: number;
+  label: string;
+};
 
 const sections: Record<Role, { label: string; href: string }[]> = {
-  customer: [
-    { label: "My Rentals", href: "/dashboard/my-rentals" },
-  ],
+  customer: [{ label: "My Rentals", href: "/dashboard/my-rentals" }],
   owner: [
     { label: "My Equipment", href: "/dashboard/owner/equipment" },
     { label: "Add Equipment", href: "/dashboard/owner/equipment/new" },
@@ -35,6 +62,7 @@ const sections: Record<Role, { label: string; href: string }[]> = {
 };
 
 const loginUrl = "/login?next=%2Fdashboard";
+const countFormat = new Intl.NumberFormat("en-BD");
 
 export default function DashboardPage({ searchParams }: DashboardProps) {
   return (
@@ -153,6 +181,187 @@ async function DashboardContent({ searchParams }: DashboardProps) {
           No dashboard sections are available for this account.
         </p>
       )}
+
+      {(role === "admin" || role === "owner") && (
+        <Suspense
+          fallback={<p role="status" className="mt-8">Loading analytics…</p>}
+        >
+          <DashboardAnalytics apiUrl={apiUrl} cookie={cookie} role={role} />
+        </Suspense>
+      )}
     </>
   );
+}
+
+function formatMoney({ currency, amountMinor }: MoneyTotal) {
+  return new Intl.NumberFormat("en-BD", {
+    style: "currency",
+    currency: currency.toUpperCase(),
+    currencyDisplay: "code",
+  }).format(amountMinor / 100);
+}
+
+function formatTotals(totals: MoneyTotal[]) {
+  return totals.length ? totals.map(formatMoney).join(" · ") : "BDT 0";
+}
+
+function MonthlyChart({ title, bars }: { title: string; bars: ChartBar[] }) {
+  const max = bars.reduce((largest, { value }) => Math.max(largest, value), 1);
+
+  return (
+    <div className="rounded-xl border border-zinc-200 bg-white p-5">
+      <h3 className="font-semibold">{title}</h3>
+
+      {bars.length === 0 ? (
+        <p className="mt-3 text-sm text-zinc-600">No monthly data yet.</p>
+      ) : (
+        <ul className="mt-4 space-y-4">
+          {bars.map(({ month, value, label }) => (
+            <li key={month}>
+              <div className="mb-1 flex justify-between gap-3 text-sm">
+                <span>{month}</span>
+                <span className="font-medium tabular-nums">{label}</span>
+              </div>
+              <div aria-hidden="true" className="h-2 rounded-full bg-blue-100">
+                <div
+                  className="h-full rounded-full bg-blue-700"
+                  style={{ width: `${(value / max) * 100}%` }}
+                />
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+
+async function DashboardAnalytics({
+  apiUrl,
+  cookie,
+  role,
+}: {
+  apiUrl: string;
+  cookie: string;
+  role: AnalyticsRole;
+}) {
+  try {
+    const tokenResponse = await fetch(`${apiUrl}/api/auth/token`, {
+      headers: { cookie },
+      cache: "no-store",
+    });
+
+    if (!tokenResponse.ok) {
+      throw new Error("Could not obtain an analytics token.");
+    }
+
+    const { token } = (await tokenResponse.json()) as { token?: string };
+
+    if (typeof token !== "string" || !token) {
+      throw new Error("Missing analytics token.");
+    }
+
+    const response = await fetch(`${apiUrl}/api/${role}/analytics`, {
+      headers: { Authorization: `Bearer ${token}` },
+      cache: "no-store",
+    });
+
+    if (!response.ok) {
+      throw new Error(`Analytics request returned ${response.status}.`);
+    }
+
+    const payload = (await response.json()) as {
+      success: boolean;
+      data?: AdminAnalytics | OwnerAnalytics;
+    };
+
+    if (!payload.success || !payload.data) {
+      throw new Error("Analytics response is missing data.");
+    }
+
+    let metrics: [string, string][];
+    let charts: ReactNode;
+
+    if (role === "admin") {
+      const data = payload.data as AdminAnalytics;
+
+      metrics = [
+        ["Total users", countFormat.format(data.totalUsers)],
+        ["Total equipment", countFormat.format(data.totalEquipment)],
+        ["Total bookings", countFormat.format(data.totalBookings)],
+        ["Pending approvals", countFormat.format(data.pendingApprovals)],
+        ["Completed rentals", countFormat.format(data.completedRentals)],
+        ["Total revenue", formatTotals(data.totalRevenue)],
+      ];
+
+      charts = (
+        <MonthlyChart
+          title="Monthly bookings"
+          bars={data.monthlyBookings.map(({ month, count }) => ({
+            month,
+            value: count,
+            label: countFormat.format(count),
+          }))}
+        />
+      );
+    } else {
+      const data = payload.data as OwnerAnalytics;
+
+      metrics = [
+        ["Listed equipment", countFormat.format(data.totalListedEquipment)],
+        ["Completed rentals", countFormat.format(data.completedRentals)],
+        ["Total earnings", formatTotals(data.totalEarnings)],
+      ];
+
+      const currencies = [
+        ...new Set(data.monthlyEarnings.map(({ currency }) => currency)),
+      ];
+
+      charts = currencies.length ? (
+        currencies.map((currency) => (
+          <MonthlyChart
+            key={currency}
+            title={`Monthly earnings (${currency.toUpperCase()})`}
+            bars={data.monthlyEarnings
+              .filter((entry) => entry.currency === currency)
+              .map((entry) => ({
+                month: entry.month,
+                value: entry.amountMinor,
+                label: formatMoney(entry),
+              }))}
+          />
+        ))
+      ) : (
+        <MonthlyChart title="Monthly earnings" bars={[]} />
+      );
+    }
+
+    return (
+      <section aria-labelledby="analytics-heading" className="mt-10">
+        <h2 id="analytics-heading" className="text-2xl font-bold">
+          {role === "admin" ? "Platform analytics" : "Rental analytics"}
+        </h2>
+
+        <dl className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {metrics.map(([label, value]) => (
+            <div
+              key={label}
+              className="rounded-xl border border-zinc-200 bg-white p-5"
+            >
+              <dt className="text-sm text-zinc-600">{label}</dt>
+              <dd className="mt-1 text-2xl font-semibold tabular-nums">{value}</dd>
+            </div>
+          ))}
+        </dl>
+
+        <div className="mt-4 grid gap-4">{charts}</div>
+      </section>
+    );
+  } catch {
+    return (
+      <p role="alert" className="mt-8 rounded-lg bg-red-50 p-4 text-red-800">
+        Could not load analytics. Refresh to try again.
+      </p>
+    );
+  }
 }
